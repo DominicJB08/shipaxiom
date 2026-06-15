@@ -42,6 +42,13 @@ SITE_URL=https://shipaxiom.com npm run capture
 npm run workflow-video
 ```
 
+To regenerate the cinematic Google Veo version, copy a Gemini API key into
+`.tmp/gemini_api_key` or set `GEMINI_API_KEY`, then run:
+
+```bash
+npm run veo-video
+```
+
 ## Deploy
 
 ```bash
@@ -66,7 +73,7 @@ See `docs/offer-research.md` for the pricing and delivery-model rationale.
 - `demo/screenshots/mobile-fullpage.png`: deployed mobile capture.
 - `demo/videos/shipaxiom-demo.mp4`: deployed-site screen recording.
 - `demo/qa-results.json`: capture-time responsive QA checks.
-- `public/media/workflow-demo.mp4`: embedded workflow explainer video.
-- `public/media/workflow-demo.webm`: embedded workflow explainer video fallback.
+- `public/media/workflow-demo.mp4`: embedded Google Veo workflow explainer video.
+- `public/media/workflow-demo.webm`: embedded Google Veo workflow explainer video fallback.
 - `public/media/workflow-demo-poster.jpg`: poster frame for the embedded video.
 - `public/images/local-ai-workstation.png`: generated hero/supporting raster asset.

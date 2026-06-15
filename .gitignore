@@ -1,6 +1,7 @@
 node_modules/
 dist/
 .wrangler/
+.tmp/
 .DS_Store
 *.local
 demo/*.webm
