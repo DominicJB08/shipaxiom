@@ -1,0 +1,32 @@
+{
+  "baseUrl": "https://shipaxiom.com",
+  "desktop": {
+    "bodyWidth": 1440,
+    "clientWidth": 1440,
+    "h1": "Private AI workflows that run close to the work.",
+    "nextSectionVisible": true,
+    "overflowX": false,
+    "title": "Ship Axiom | Private AI workflows",
+    "viewport": {
+      "height": 900,
+      "width": 1440
+    }
+  },
+  "mobile": {
+    "bodyWidth": 390,
+    "clientWidth": 390,
+    "h1": "Private AI workflows that run close to the work.",
+    "nextSectionVisible": true,
+    "overflowX": false,
+    "title": "Ship Axiom | Private AI workflows",
+    "viewport": {
+      "height": 844,
+      "width": 390
+    }
+  },
+  "screenshots": {
+    "desktop": "/Users/dominicburgess/Projects/shipaxiom/demo/screenshots/desktop-fullpage.png",
+    "mobile": "/Users/dominicburgess/Projects/shipaxiom/demo/screenshots/mobile-fullpage.png"
+  },
+  "video": "/Users/dominicburgess/Projects/shipaxiom/demo/videos/shipaxiom-demo.webm"
+}

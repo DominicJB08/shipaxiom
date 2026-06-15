@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.wrangler/
+.DS_Store
+*.local
+demo/*.webm
+demo/*.mp4
+demo/*.png
+demo/videos/*.webm
+!demo/concept.png
