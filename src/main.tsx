@@ -142,6 +142,7 @@ function App() {
         <nav aria-label="Primary navigation">
           <a href="#workflows">Workflows</a>
           <a href="#stack">Delivery Model</a>
+          <a href="#walkthrough">Video</a>
           <a href="#demo">Demo</a>
           <a href="#pricing">Pricing</a>
         </nav>
@@ -230,6 +231,33 @@ function App() {
               <p>{option.text}</p>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section id="walkthrough" className="video-section section-shell">
+        <div className="section-heading video-heading">
+          <h2>Watch the workflow: manual work vs AI-assisted review</h2>
+          <p>
+            Example: an intake packet becomes structured fields, a summary, and a human-approved
+            task list without removing staff from the final decision.
+          </p>
+          <div className="saving-metrics" aria-label="Workflow time comparison">
+            <span><strong>45 min</strong> human-only</span>
+            <span><strong>6 min</strong> AI-assisted</span>
+            <span><strong>39 min</strong> saved per packet</span>
+          </div>
+        </div>
+        <div className="video-shell">
+          <video
+            controls
+            playsInline
+            preload="metadata"
+            poster="/media/workflow-demo-poster.jpg"
+            aria-label="Ship Axiom example workflow video comparing manual intake review with AI-assisted review"
+          >
+            <source src="/media/workflow-demo.mp4" type="video/mp4" />
+            <source src="/media/workflow-demo.webm" type="video/webm" />
+          </video>
         </div>
       </section>
 
@@ -337,6 +365,7 @@ function App() {
         <nav aria-label="Footer navigation">
           <a href="#workflows">Workflows</a>
           <a href="#stack">Delivery Model</a>
+          <a href="#walkthrough">Video</a>
           <a href="#demo">Demo</a>
           <a href="#pricing">Pricing</a>
         </nav>

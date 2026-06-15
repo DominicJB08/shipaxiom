@@ -9,6 +9,7 @@
     "preview": "vite preview --host 127.0.0.1",
     "check": "tsc --noEmit",
     "capture": "node scripts/capture-demo.mjs",
+    "workflow-video": "node scripts/create-workflow-video.mjs",
     "deploy": "wrangler deploy",
     "leads": "wrangler d1 execute shipaxiom-leads --remote --command \"SELECT id, created_at, name, email, company, package_interest, status FROM leads ORDER BY created_at DESC LIMIT 25\""
   },
