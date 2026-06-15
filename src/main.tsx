@@ -1,9 +1,10 @@
-import React, { type FormEvent, useMemo, useState } from "react";
+import React, { type FormEvent, useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   ArrowRight,
   BadgeCheck,
   Bot,
+  Building2,
   CalendarDays,
   Check,
   ChevronRight,
@@ -13,10 +14,17 @@ import {
   DatabaseZap,
   ExternalLink,
   FileSearch,
+  Inbox,
+  KeyRound,
   LockKeyhole,
+  LogOut,
   Map,
+  Mail,
   MousePointerClick,
+  Phone,
+  RefreshCw,
   Rocket,
+  Search,
   Send,
   ShieldCheck,
   Sparkles,
@@ -29,6 +37,7 @@ import "./styles.css";
 
 type StackKey = "daily" | "fallback" | "specialist";
 type Impact = "High impact" | "Medium impact";
+type LeadStatus = "new" | "contacted" | "qualified" | "booked" | "won" | "lost" | "archived";
 
 type WorkflowStep = {
   title: string;
@@ -40,6 +49,24 @@ type AuditItem = {
   source: string;
   output: string;
   impact: Impact;
+};
+
+type AdminLead = {
+  id: number;
+  created_at: string;
+  name: string;
+  email: string;
+  company: string;
+  phone: string | null;
+  industry: string;
+  team_size: string;
+  budget: string;
+  preferred_time: string | null;
+  workflow: string;
+  privacy_needs: string | null;
+  package_interest: string;
+  source: string;
+  status: LeadStatus;
 };
 
 const workflowSteps: WorkflowStep[] = [
@@ -121,7 +148,23 @@ const deliveryOptions = [
   }
 ];
 
+const leadStatuses: LeadStatus[] = ["new", "contacted", "qualified", "booked", "won", "lost", "archived"];
+
+const statusLabels: Record<LeadStatus, string> = {
+  new: "New",
+  contacted: "Contacted",
+  qualified: "Qualified",
+  booked: "Booked",
+  won: "Won",
+  lost: "Lost",
+  archived: "Archived"
+};
+
 function App() {
+  if (window.location.pathname === "/admin") {
+    return <AdminApp />;
+  }
+
   const [stack, setStack] = useState<StackKey>("daily");
   const [auditGenerated, setAuditGenerated] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState("Ship Sprint");
@@ -382,6 +425,419 @@ function TrustItem({ icon: Icon, title, text }: { icon: LucideIcon; title: strin
       <span>{text}</span>
     </div>
   );
+}
+
+function AdminApp() {
+  const [session, setSession] = useState<"checking" | "authenticated" | "anonymous">("checking");
+  const [adminUser, setAdminUser] = useState("");
+  const [loginForm, setLoginForm] = useState({ username: "", password: "" });
+  const [loginMessage, setLoginMessage] = useState("");
+  const [leads, setLeads] = useState<AdminLead[]>([]);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [statusFilter, setStatusFilter] = useState<LeadStatus | "all">("all");
+  const [query, setQuery] = useState("");
+  const [loadingLeads, setLoadingLeads] = useState(false);
+  const [adminError, setAdminError] = useState("");
+  const [updatingId, setUpdatingId] = useState<number | null>(null);
+
+  useEffect(() => {
+    void checkSession();
+  }, []);
+
+  useEffect(() => {
+    if (session === "authenticated") {
+      void loadLeads();
+    }
+  }, [session]);
+
+  useEffect(() => {
+    if (!leads.length) {
+      setSelectedId(null);
+      return;
+    }
+
+    if (!selectedId || !leads.some((lead) => lead.id === selectedId)) {
+      setSelectedId(leads[0].id);
+    }
+  }, [leads, selectedId]);
+
+  const filteredLeads = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    return leads.filter((lead) => {
+      const matchesStatus = statusFilter === "all" || lead.status === statusFilter;
+      const matchesSearch =
+        !needle ||
+        [lead.name, lead.email, lead.company, lead.industry, lead.workflow, lead.package_interest]
+          .filter(Boolean)
+          .some((value) => value.toLowerCase().includes(needle));
+
+      return matchesStatus && matchesSearch;
+    });
+  }, [leads, query, statusFilter]);
+
+  const metrics = useMemo(
+    () => ({
+      total: leads.length,
+      new: leads.filter((lead) => lead.status === "new").length,
+      active: leads.filter((lead) => ["contacted", "qualified", "booked"].includes(lead.status)).length,
+      won: leads.filter((lead) => lead.status === "won").length
+    }),
+    [leads]
+  );
+
+  const selectedLead = leads.find((lead) => lead.id === selectedId) || filteredLeads[0] || null;
+
+  async function checkSession() {
+    try {
+      const response = await fetch("/api/admin/session", { credentials: "include" });
+      const result = (await response.json()) as { ok: boolean; user?: string };
+      if (response.ok && result.ok) {
+        setAdminUser(result.user || "");
+        setSession("authenticated");
+        return;
+      }
+    } catch {
+      setAdminError("Could not check the admin session.");
+    }
+
+    setSession("anonymous");
+  }
+
+  async function submitLogin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setLoginMessage("");
+
+    try {
+      const response = await fetch("/api/admin/login", {
+        method: "POST",
+        credentials: "include",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(loginForm)
+      });
+      const result = (await response.json()) as { ok: boolean; user?: string; error?: string };
+
+      if (!response.ok || !result.ok) {
+        setLoginMessage(result.error || "Invalid username or password.");
+        return;
+      }
+
+      setAdminUser(result.user || loginForm.username);
+      setLoginForm((current) => ({ ...current, password: "" }));
+      setSession("authenticated");
+    } catch {
+      setLoginMessage("Could not sign in. Try again in a moment.");
+    }
+  }
+
+  async function loadLeads() {
+    setLoadingLeads(true);
+    setAdminError("");
+
+    try {
+      const response = await fetch("/api/admin/leads", { credentials: "include" });
+      const result = (await response.json()) as { ok: boolean; leads?: AdminLead[]; error?: string };
+
+      if (response.status === 401) {
+        setSession("anonymous");
+        setLeads([]);
+        return;
+      }
+
+      if (!response.ok || !result.ok) {
+        setAdminError(result.error || "Could not load booking requests.");
+        return;
+      }
+
+      setLeads((result.leads || []).map((lead) => ({ ...lead, status: lead.status || "new" })));
+    } catch {
+      setAdminError("Could not load booking requests.");
+    } finally {
+      setLoadingLeads(false);
+    }
+  }
+
+  async function updateLeadStatus(id: number, status: LeadStatus) {
+    setUpdatingId(id);
+    setAdminError("");
+
+    try {
+      const response = await fetch(`/api/admin/leads/${id}`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ status })
+      });
+      const result = (await response.json()) as { ok: boolean; error?: string };
+
+      if (!response.ok || !result.ok) {
+        setAdminError(result.error || "Could not update the lead.");
+        return;
+      }
+
+      setLeads((current) => current.map((lead) => (lead.id === id ? { ...lead, status } : lead)));
+    } catch {
+      setAdminError("Could not update the lead.");
+    } finally {
+      setUpdatingId(null);
+    }
+  }
+
+  async function logout() {
+    await fetch("/api/admin/logout", { method: "POST", credentials: "include" }).catch(() => null);
+    setSession("anonymous");
+    setLeads([]);
+    setAdminUser("");
+  }
+
+  if (session === "checking") {
+    return (
+      <main className="admin-page admin-login">
+        <section className="admin-login-card">
+          <a className="brand small" href="/">
+            <span className="brand-mark"><span /></span>
+            <span>Ship Axiom</span>
+          </a>
+          <div className="admin-login-icon">
+            <RefreshCw size={24} />
+          </div>
+          <h1>Checking session</h1>
+        </section>
+      </main>
+    );
+  }
+
+  if (session === "anonymous") {
+    return (
+      <main className="admin-page admin-login">
+        <section className="admin-login-card">
+          <a className="brand small" href="/">
+            <span className="brand-mark"><span /></span>
+            <span>Ship Axiom</span>
+          </a>
+          <div className="admin-login-icon">
+            <KeyRound size={24} />
+          </div>
+          <h1>Admin access</h1>
+          <p>View booking requests, contact details, workflow notes, and pipeline status.</p>
+          <form className="admin-login-form" onSubmit={submitLogin}>
+            <label>
+              Username
+              <input
+                required
+                autoComplete="username"
+                value={loginForm.username}
+                onChange={(event) => setLoginForm((current) => ({ ...current, username: event.target.value }))}
+              />
+            </label>
+            <label>
+              Password
+              <input
+                required
+                type="password"
+                autoComplete="current-password"
+                value={loginForm.password}
+                onChange={(event) => setLoginForm((current) => ({ ...current, password: event.target.value }))}
+              />
+            </label>
+            <button className="admin-button dark" type="submit">
+              <KeyRound size={17} />
+              Sign in
+            </button>
+            {loginMessage && <p className="admin-error">{loginMessage}</p>}
+          </form>
+        </section>
+      </main>
+    );
+  }
+
+  return (
+    <main className="admin-page">
+      <header className="admin-header">
+        <a className="brand small" href="/">
+          <span className="brand-mark"><span /></span>
+          <span>Ship Axiom</span>
+        </a>
+        <div className="admin-title">
+          <span>Admin</span>
+          <strong>Bookings pipeline</strong>
+        </div>
+        <div className="admin-actions">
+          <span className="admin-user">{adminUser}</span>
+          <button className="admin-button" type="button" onClick={() => void loadLeads()} disabled={loadingLeads}>
+            <RefreshCw size={16} />
+            Refresh
+          </button>
+          <button className="admin-button" type="button" onClick={() => void logout()}>
+            <LogOut size={16} />
+            Log out
+          </button>
+        </div>
+      </header>
+
+      <section className="admin-metrics" aria-label="Booking metrics">
+        <article className="admin-metric">
+          <span>Total requests</span>
+          <strong>{metrics.total}</strong>
+          <small>Latest 100 leads</small>
+        </article>
+        <article className="admin-metric">
+          <span>New</span>
+          <strong>{metrics.new}</strong>
+          <small>Needs first touch</small>
+        </article>
+        <article className="admin-metric">
+          <span>Active</span>
+          <strong>{metrics.active}</strong>
+          <small>Contacted, qualified, booked</small>
+        </article>
+        <article className="admin-metric">
+          <span>Won</span>
+          <strong>{metrics.won}</strong>
+          <small>Closed pipeline</small>
+        </article>
+      </section>
+
+      <section className="admin-toolbar" aria-label="Lead filters">
+        <label className="admin-search">
+          <Search size={17} />
+          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search leads" />
+        </label>
+        <label>
+          Status
+          <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as LeadStatus | "all")}>
+            <option value="all">All statuses</option>
+            {leadStatuses.map((status) => (
+              <option value={status} key={status}>{statusLabels[status]}</option>
+            ))}
+          </select>
+        </label>
+        <span>{filteredLeads.length} shown</span>
+      </section>
+
+      {adminError && <p className="admin-error wide">{adminError}</p>}
+
+      <section className="admin-grid">
+        <div className="lead-list" aria-label="Booking requests">
+          {loadingLeads ? (
+            <div className="empty-admin">
+              <RefreshCw size={22} />
+              <strong>Loading requests</strong>
+            </div>
+          ) : filteredLeads.length ? (
+            filteredLeads.map((lead) => (
+              <button
+                className={`lead-row ${selectedLead?.id === lead.id ? "active" : ""}`}
+                key={lead.id}
+                type="button"
+                onClick={() => setSelectedId(lead.id)}
+              >
+                <span className="lead-row-top">
+                  <strong>{lead.company}</strong>
+                  <em className={`status-chip ${lead.status}`}>{statusLabels[lead.status]}</em>
+                </span>
+                <span>{lead.name} · {lead.email}</span>
+                <small>{lead.package_interest} · {formatDate(lead.created_at)}</small>
+              </button>
+            ))
+          ) : (
+            <div className="empty-admin">
+              <Inbox size={24} />
+              <strong>No booking requests found</strong>
+              <span>Adjust the search or status filter.</span>
+            </div>
+          )}
+        </div>
+
+        <aside className="lead-detail" aria-label="Selected booking request">
+          {selectedLead ? (
+            <>
+              <div className="detail-header">
+                <div>
+                  <span>Lead #{selectedLead.id}</span>
+                  <h1>{selectedLead.company}</h1>
+                  <p>{formatDate(selectedLead.created_at)}</p>
+                </div>
+                <label>
+                  Status
+                  <select
+                    value={selectedLead.status}
+                    disabled={updatingId === selectedLead.id}
+                    onChange={(event) => void updateLeadStatus(selectedLead.id, event.target.value as LeadStatus)}
+                  >
+                    {leadStatuses.map((status) => (
+                      <option value={status} key={status}>{statusLabels[status]}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <div className="detail-actions">
+                <a href={`mailto:${selectedLead.email}`}>
+                  <Mail size={16} />
+                  Email
+                </a>
+                {selectedLead.phone && (
+                  <a href={`tel:${selectedLead.phone.replace(/[^\d+]/g, "")}`}>
+                    <Phone size={16} />
+                    Call
+                  </a>
+                )}
+              </div>
+
+              <div className="detail-grid">
+                <DetailItem icon={Mail} label="Contact" value={`${selectedLead.name} · ${selectedLead.email}`} />
+                <DetailItem icon={Phone} label="Phone" value={selectedLead.phone || "Not provided"} />
+                <DetailItem icon={Building2} label="Industry" value={selectedLead.industry} />
+                <DetailItem icon={UserCheck} label="Team size" value={selectedLead.team_size} />
+                <DetailItem icon={Target} label="Budget" value={selectedLead.budget} />
+                <DetailItem icon={CalendarDays} label="Best time" value={selectedLead.preferred_time || "Not provided"} />
+              </div>
+
+              <section className="detail-block">
+                <span>Package</span>
+                <p>{selectedLead.package_interest}</p>
+              </section>
+              <section className="detail-block">
+                <span>Workflow to fix first</span>
+                <p>{selectedLead.workflow}</p>
+              </section>
+              <section className="detail-block">
+                <span>Privacy or deployment needs</span>
+                <p>{selectedLead.privacy_needs || "Not provided"}</p>
+              </section>
+            </>
+          ) : (
+            <div className="empty-admin">
+              <Inbox size={24} />
+              <strong>Select a request</strong>
+            </div>
+          )}
+        </aside>
+      </section>
+    </main>
+  );
+}
+
+function DetailItem({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
+  return (
+    <div className="detail-item">
+      <Icon size={17} />
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function formatDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short"
+  }).format(date);
 }
 
 function StackRow({
