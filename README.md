@@ -1,8 +1,8 @@
 # Ship Axiom
 
-Demo website for `shipaxiom.com`.
+Lead-capture website for `shipaxiom.com`.
 
-Ship Axiom is positioned as a privacy-first local AI operations studio that maps repetitive admin work, recommends the safest local-AI wedge, and ships a 7-day pilot with human review.
+Ship Axiom is positioned as a privacy-first AI workflow studio that maps repetitive admin work, recommends the safest private deployment path, and ships a first workflow without requiring an up-front AI PC install.
 
 Live site:
 
@@ -22,6 +22,14 @@ npm run dev
 npm run build
 ```
 
+## View Leads
+
+Submitted audit requests are stored in Cloudflare D1.
+
+```bash
+npm run leads
+```
+
 ## Capture Demo
 
 ```bash
@@ -38,6 +46,12 @@ The site is configured as a Cloudflare Worker with static assets in `wrangler.js
 
 - `shipaxiom.com`
 - `www.shipaxiom.com`
+
+The intake API is served by the same Worker at `/api/leads` and stores submissions in the `shipaxiom-leads` D1 database.
+
+## Offer Research
+
+See `docs/offer-research.md` for the pricing and delivery-model rationale.
 
 ## Demo Assets
 

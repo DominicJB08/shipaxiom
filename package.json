@@ -9,7 +9,8 @@
     "preview": "vite preview --host 127.0.0.1",
     "check": "tsc --noEmit",
     "capture": "node scripts/capture-demo.mjs",
-    "deploy": "wrangler deploy"
+    "deploy": "wrangler deploy",
+    "leads": "wrangler d1 execute shipaxiom-leads --remote --command \"SELECT id, created_at, name, email, company, package_interest, status FROM leads ORDER BY created_at DESC LIMIT 25\""
   },
   "dependencies": {
     "lucide-react": "^0.561.0",

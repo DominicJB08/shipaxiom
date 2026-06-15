@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { type FormEvent, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   ArrowRight,
@@ -17,6 +17,7 @@ import {
   Map,
   MousePointerClick,
   Rocket,
+  Send,
   ShieldCheck,
   Sparkles,
   Target,
@@ -45,9 +46,9 @@ const workflowSteps: WorkflowStep[] = [
   { title: "Map", text: "We map your repetitive work, systems, and data boundaries.", icon: FileSearch },
   { title: "Find the wedge", text: "We identify the highest-impact, lowest-risk automation.", icon: Target },
   { title: "Design", text: "We design prompts, guardrails, and review steps.", icon: Code2 },
-  { title: "Build local", text: "We build and test locally using the right model.", icon: Bot },
+  { title: "Build remote", text: "We build the first workflow remotely in a private workspace.", icon: Bot },
   { title: "Validate", text: "You review outputs before anything ships.", icon: ShieldCheck },
-  { title: "Ship", text: "We deploy on your Mac or private server.", icon: Rocket },
+  { title: "Ship", text: "We deploy to existing client hardware, a private server, or a managed cloud worker.", icon: Rocket },
   { title: "Handover", text: "We document and train your team.", icon: UserCheck }
 ];
 
@@ -61,51 +62,69 @@ const auditItems: AuditItem[] = [
 
 const stackCards: Record<StackKey, { title: string; sub: string; detail: string; stat: string }> = {
   daily: {
-    title: "Qwen3.6-35B-A3B MLX",
-    sub: "4-bit daily driver",
-    detail: "Fast extraction, summaries, classification, audit drafts, and routine code work on Apple Silicon.",
-    stat: "3B active params"
+    title: "Remote private workspace",
+    sub: "Default pilot path",
+    detail: "Private build environment for intake, prompts, automation logic, and review artifacts without buying hardware first.",
+    stat: "No AI PC required"
   },
   fallback: {
-    title: "Qwen3.6 higher-bit",
-    sub: "6-bit or 8-bit fallback",
-    detail: "Reserved for harder planning, complex reasoning, and coding tasks where accuracy matters more than speed.",
-    stat: "262K context"
+    title: "Client-owned Mac or server",
+    sub: "Local install path",
+    detail: "If the client already has suitable hardware, we install and document the local model workflow remotely.",
+    stat: "Existing hardware"
   },
   specialist: {
-    title: "GLM-4.5-Air MLX",
-    sub: "Tool-loop specialist",
-    detail: "Kept for strict agentic coding flows where reliable tool use matters more than being the universal default.",
-    stat: "128K context"
+    title: "On-site appliance build",
+    sub: "Scoped add-on",
+    detail: "Only quoted when the client needs on-prem hardware and pays for the machine, travel, and setup.",
+    stat: "Not the default"
   }
 };
 
 const pricing = [
   {
-    title: "Private AI Ops Audit",
-    price: "$299",
+    title: "AI Workflow Audit",
+    price: "$2,500",
     note: "One-time",
-    bullets: ["Workflow and system map", "Top opportunities and risk", "Privacy boundary review", "7-day pilot recommendation"]
+    bullets: ["Workflow and system map", "Top opportunities and risk", "Privacy boundary review", "Pilot scope and quote"]
   },
   {
-    title: "7-Day Pilot",
-    price: "$2,500",
+    title: "Ship Sprint",
+    price: "$9,500",
     note: "Fixed scope",
     featured: true,
-    bullets: ["Everything in the audit", "Build and test one workflow", "Local deployment", "Team handover docs"]
+    bullets: ["Everything in the audit", "Build and test one workflow", "Private remote deployment", "30-day handover support"]
   },
   {
-    title: "Ongoing Support",
-    price: "$750",
+    title: "Ops Care",
+    price: "$1,250",
     note: "Per month",
     bullets: ["Workflow improvements", "New automations", "Monitoring and guardrails", "Priority support"]
+  }
+];
+
+const deliveryOptions = [
+  {
+    title: "Remote-first pilot",
+    text: "We prove the workflow remotely first, using private project infrastructure and human approval gates.",
+    tag: "Default"
+  },
+  {
+    title: "Existing client hardware",
+    text: "If a client already has a capable Mac, workstation, or server, we can install the workflow remotely.",
+    tag: "Local when practical"
+  },
+  {
+    title: "Hardware as an add-on",
+    text: "On-site PC builds are quoted separately so travel and equipment never come out of the pilot budget.",
+    tag: "Scoped separately"
   }
 ];
 
 function App() {
   const [stack, setStack] = useState<StackKey>("daily");
   const [auditGenerated, setAuditGenerated] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState("7-Day Pilot");
+  const [selectedPlan, setSelectedPlan] = useState("Ship Sprint");
   const [checks, setChecks] = useState([true, true, false]);
 
   const stackInfo = stackCards[stack];
@@ -122,7 +141,7 @@ function App() {
         </a>
         <nav aria-label="Primary navigation">
           <a href="#workflows">Workflows</a>
-          <a href="#stack">Model Stack</a>
+          <a href="#stack">Delivery Model</a>
           <a href="#demo">Demo</a>
           <a href="#pricing">Pricing</a>
         </nav>
@@ -136,8 +155,8 @@ function App() {
         <div className="hero-copy">
           <h1>Private AI workflows that run close to the work.</h1>
           <p>
-            Ship Axiom maps repetitive admin, proves the safest local-AI wedge, and ships a
-            7-day pilot without sending sensitive context to cloud LLMs.
+            Ship Axiom maps repetitive admin, proves the safest private-AI wedge, and ships a
+            first workflow without forcing a hardware purchase or an on-site AI PC build.
           </p>
           <div className="hero-actions">
             <button className="primary-action" onClick={() => setAuditGenerated(true)}>
@@ -145,14 +164,14 @@ function App() {
               Generate an audit
             </button>
             <a className="secondary-action" href="#stack">
-              See model stack
+              Delivery model
               <ChevronRight size={17} />
             </a>
           </div>
           <div className="trust-row" aria-label="Key promises">
-            <TrustItem icon={LockKeyhole} title="Privacy-first by default" text="Data stays on your device or network." />
+            <TrustItem icon={LockKeyhole} title="Privacy-first by default" text="Sensitive work stays in scoped private systems." />
             <TrustItem icon={ShieldCheck} title="Human in the loop" text="Every output reviewed before it ships." />
-            <TrustItem icon={Zap} title="7 days to value" text="Audit, build, and ship in one focused week." />
+            <TrustItem icon={Zap} title="Remote-first delivery" text="Hardware is quoted only when it is actually needed." />
           </div>
         </div>
         <AuditCockpit auditGenerated={auditGenerated} stack={stack} setStack={setStack} stackInfo={stackInfo} />
@@ -178,23 +197,39 @@ function App() {
 
       <section id="stack" className="model-section section-shell">
         <div className="section-heading model-heading">
-          <h2>Local model stack. Right model. Right job.</h2>
+          <h2>Private delivery stack. Right environment. Right job.</h2>
           <p>
-            We run a local-first stack on Apple Silicon. Use the efficient 4-bit model
-            for everyday work, then escalate only when deeper reasoning is useful.
+            We start remote-first so the pilot can sell and ship quickly. Local deployment is
+            available when the client already has the right hardware or funds it as an add-on.
           </p>
-          <a href="#demo">Explore the model stack <ArrowRight size={15} /></a>
+          <a href="#demo">Explore the delivery model <ArrowRight size={15} /></a>
         </div>
-        <div className="stack-table" role="table" aria-label="Local model stack comparison">
+        <div className="stack-table" role="table" aria-label="Private delivery model comparison">
           <div className="stack-row stack-head" role="row">
-            <span>Model</span>
+            <span>Path</span>
             <span>Use for</span>
-            <span>Quantization</span>
-            <span>Runs on Apple Silicon</span>
+            <span>Cost risk</span>
+            <span>Default?</span>
           </div>
-          <StackRow active={stack === "daily"} onClick={() => setStack("daily")} label="Daily driver" model="Qwen3.6-35B-A3B MLX" use="Drafting, extraction, classification, summarization, routine coding" quant="4-bit" />
-          <StackRow active={stack === "fallback"} onClick={() => setStack("fallback")} label="Fallback" model="Qwen3.6-35B-A3B MLX" use="Hard planning, complex reasoning, higher-accuracy coding" quant="6-bit / 8-bit" />
-          <StackRow active={stack === "specialist"} onClick={() => setStack("specialist")} label="Tool loops" model="GLM-4.5-Air MLX" use="Claude Code, Cline, OpenCLAW-style strict tool use" quant="4-bit / 6-bit" />
+          <StackRow active={stack === "daily"} onClick={() => setStack("daily")} label="Default" model="Remote private workspace" use="Audit, workflow build, automation logic, review artifacts" quant="Low" />
+          <StackRow active={stack === "fallback"} onClick={() => setStack("fallback")} label="Local if available" model="Client-owned Mac or server" use="Sensitive workflows where the client already owns suitable hardware" quant="Medium" />
+          <StackRow active={stack === "specialist"} onClick={() => setStack("specialist")} label="Add-on" model="On-site appliance build" use="Air-gapped or regulated clients that fund hardware, travel, and setup" quant="Quoted" />
+        </div>
+      </section>
+
+      <section className="delivery-section section-shell">
+        <div className="section-heading">
+          <h2>No expensive hardware promise up front</h2>
+          <p>The business model is designed to sell remotely first and avoid cash-heavy installs until a client funds them.</p>
+        </div>
+        <div className="delivery-grid">
+          {deliveryOptions.map((option) => (
+            <article className="delivery-card" key={option.title}>
+              <span>{option.tag}</span>
+              <h3>{option.title}</h3>
+              <p>{option.text}</p>
+            </article>
+          ))}
         </div>
       </section>
 
@@ -226,7 +261,7 @@ function App() {
           </p>
           <div className="mini-list">
             <span>Input: intake form PDF</span>
-            <span>Model: {stackInfo.title}</span>
+            <span>Environment: {stackInfo.title}</span>
             <span>Review: verify extracted fields</span>
           </div>
         </article>
@@ -247,13 +282,13 @@ function App() {
         </article>
       </section>
 
-      <section className="image-band section-shell" aria-label="Local workstation preview">
-        <img src="/images/local-ai-workstation.png" alt="Local AI workstation running a private audit cockpit" />
+      <section className="image-band section-shell" aria-label="Private AI workflow preview">
+        <img src="/images/local-ai-workstation.png" alt="Private AI workflow cockpit on a workstation" />
         <div>
           <h2>Built for the machines already in the room.</h2>
           <p>
-            A strong Apple Silicon laptop can handle the first proof-of-value. Ship Axiom designs
-            workflows around local inference, exportable artifacts, and explicit review gates.
+            The first proof-of-value runs remotely unless the client already has suitable hardware.
+            Local AI installs stay available, but only as a funded deployment path.
           </p>
         </div>
       </section>
@@ -285,15 +320,12 @@ function App() {
       </section>
 
       <section id="book" className="final-cta">
-        <div>
-          <h2>Keep your data private. Ship AI that works.</h2>
-          <p>Book a private audit and see the highest-impact workflow we can ship in 7 days locally.</p>
+        <div className="booking-copy">
+          <h2>Book the audit. Keep payment for later.</h2>
+          <p>Tell us where the admin work is getting stuck. We will reply with next steps and scheduling options.</p>
+          <a href="mailto:hello@shipaxiom.com?subject=Private%20AI%20Workflow%20Audit">hello@shipaxiom.com</a>
         </div>
-        <a href="mailto:hello@shipaxiom.com?subject=Private%20AI%20Ops%20Audit" className="blue-action">
-          <CalendarDays size={19} />
-          Book your audit
-        </a>
-        <span>No commitment. 30-minute call.</span>
+        <LeadForm selectedPlan={selectedPlan} setSelectedPlan={setSelectedPlan} />
       </section>
 
       <footer className="site-footer">
@@ -301,10 +333,10 @@ function App() {
           <span className="brand-mark"><span /></span>
           <span>Ship Axiom</span>
         </a>
-        <span>© 2026 Ship Axiom. Demo site.</span>
+        <span>© 2026 Ship Axiom. Private AI workflow audits.</span>
         <nav aria-label="Footer navigation">
           <a href="#workflows">Workflows</a>
-          <a href="#stack">Model Stack</a>
+          <a href="#stack">Delivery Model</a>
           <a href="#demo">Demo</a>
           <a href="#pricing">Pricing</a>
         </nav>
@@ -346,8 +378,160 @@ function StackRow({
       </span>
       <span>{use}</span>
       <span>{quant}</span>
-      <span className="apple-pill">Optimized</span>
+      <span className="apple-pill">{label === "Default" ? "Yes" : label}</span>
     </button>
+  );
+}
+
+function LeadForm({
+  selectedPlan,
+  setSelectedPlan
+}: {
+  selectedPlan: string;
+  setSelectedPlan: (plan: string) => void;
+}) {
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    company: "",
+    phone: "",
+    industry: "",
+    teamSize: "",
+    budget: "",
+    preferredTime: "",
+    workflow: "",
+    privacyNeeds: "",
+    website: ""
+  });
+  const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+  const [message, setMessage] = useState("");
+
+  function updateField(field: keyof typeof form, value: string) {
+    setForm((current) => ({ ...current, [field]: value }));
+  }
+
+  async function submitLead(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setStatus("submitting");
+    setMessage("");
+
+    try {
+      const response = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ ...form, packageInterest: selectedPlan })
+      });
+      const result = (await response.json()) as { ok: boolean; id?: number; error?: string };
+
+      if (!response.ok || !result.ok) {
+        setStatus("error");
+        setMessage(result.error || "Something went wrong. Email hello@shipaxiom.com if this keeps happening.");
+        return;
+      }
+
+      setStatus("success");
+      setMessage(`Request received${result.id ? ` #${result.id}` : ""}. We will reply with next steps and scheduling options.`);
+      setForm({
+        name: "",
+        email: "",
+        company: "",
+        phone: "",
+        industry: "",
+        teamSize: "",
+        budget: "",
+        preferredTime: "",
+        workflow: "",
+        privacyNeeds: "",
+        website: ""
+      });
+    } catch {
+      setStatus("error");
+      setMessage("Could not send the request. Email hello@shipaxiom.com if this keeps happening.");
+    }
+  }
+
+  return (
+    <form className="lead-form" onSubmit={submitLead}>
+      <label className="hidden-field">
+        Website
+        <input value={form.website} onChange={(event) => updateField("website", event.target.value)} tabIndex={-1} autoComplete="off" />
+      </label>
+      <div className="form-grid">
+        <label>
+          Name
+          <input required value={form.name} onChange={(event) => updateField("name", event.target.value)} autoComplete="name" />
+        </label>
+        <label>
+          Work email
+          <input required type="email" value={form.email} onChange={(event) => updateField("email", event.target.value)} autoComplete="email" />
+        </label>
+        <label>
+          Company
+          <input required value={form.company} onChange={(event) => updateField("company", event.target.value)} autoComplete="organization" />
+        </label>
+        <label>
+          Phone
+          <input value={form.phone} onChange={(event) => updateField("phone", event.target.value)} autoComplete="tel" />
+        </label>
+        <label>
+          Industry
+          <select required value={form.industry} onChange={(event) => updateField("industry", event.target.value)}>
+            <option value="">Select</option>
+            <option>Clinic or healthcare admin</option>
+            <option>Law firm</option>
+            <option>Accounting or tax</option>
+            <option>Home services</option>
+            <option>B2B services</option>
+            <option>Other</option>
+          </select>
+        </label>
+        <label>
+          Team size
+          <select required value={form.teamSize} onChange={(event) => updateField("teamSize", event.target.value)}>
+            <option value="">Select</option>
+            <option>1-5</option>
+            <option>6-15</option>
+            <option>16-50</option>
+            <option>51+</option>
+          </select>
+        </label>
+        <label>
+          Budget range
+          <select required value={form.budget} onChange={(event) => updateField("budget", event.target.value)}>
+            <option value="">Select</option>
+            <option>$2,500 audit first</option>
+            <option>$9,500 sprint ready</option>
+            <option>$15,000+ regulated pilot</option>
+            <option>Need guidance</option>
+          </select>
+        </label>
+        <label>
+          Package interest
+          <select required value={selectedPlan} onChange={(event) => setSelectedPlan(event.target.value)}>
+            {pricing.map((plan) => (
+              <option key={plan.title}>{plan.title}</option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <label>
+        Workflow to fix first
+        <textarea required value={form.workflow} onChange={(event) => updateField("workflow", event.target.value)} placeholder="Example: intake forms, insurance verification, monthly reports, contracts, follow-up emails..." />
+      </label>
+      <label>
+        Privacy or deployment needs
+        <textarea value={form.privacyNeeds} onChange={(event) => updateField("privacyNeeds", event.target.value)} placeholder="Example: HIPAA sensitivity, client data boundaries, existing Mac/server, no cloud storage, or no special requirements." />
+      </label>
+      <label>
+        Best times for a 30-minute call
+        <input value={form.preferredTime} onChange={(event) => updateField("preferredTime", event.target.value)} placeholder="Example: Tue or Thu after 2pm PT" />
+      </label>
+      <button className="blue-action" disabled={status === "submitting"} type="submit">
+        {status === "submitting" ? <CalendarDays size={19} /> : <Send size={19} />}
+        {status === "submitting" ? "Sending request" : "Request audit call"}
+      </button>
+      {message && <p className={`form-message ${status}`}>{message}</p>}
+    </form>
   );
 }
 
@@ -366,7 +550,7 @@ function AuditCockpit({
     <div className="cockpit" aria-label="Audit cockpit demo">
       <div className="cockpit-top">
         <strong>Audit cockpit</strong>
-        <span><CircleDot size={10} fill="currentColor" /> Local session</span>
+        <span><CircleDot size={10} fill="currentColor" /> Private session</span>
         <button>Prospect: ACME Family Clinic <ExternalLink size={14} /></button>
       </div>
       <div className="cockpit-grid">
@@ -389,10 +573,10 @@ function AuditCockpit({
           {["Business type: private medical clinic", "Team size: validate", "Key systems: EHR, billing, phone, email", "Data sensitivity: high"].map((line) => (
             <p key={line}><Check size={15} /> {line}</p>
           ))}
-          <strong><LockKeyhole size={15} /> Local processing only</strong>
+          <strong><LockKeyhole size={15} /> Private routing only</strong>
         </article>
         <article className="stack-card">
-          <h3>Model stack (local)</h3>
+          <h3>Delivery stack</h3>
           {(Object.keys(stackCards) as StackKey[]).map((key) => (
             <button key={key} className={stack === key ? "selected-model" : ""} onClick={() => setStack(key)}>
               <span>{stackCards[key].sub}</span>

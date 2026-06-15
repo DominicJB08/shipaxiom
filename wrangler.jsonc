@@ -9,6 +9,13 @@
     "directory": "./dist",
     "not_found_handling": "single-page-application"
   },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "shipaxiom-leads",
+      "database_id": "941b86c3-ceb8-4f14-ab7e-e7ee848d2294"
+    }
+  ],
   "routes": [
     {
       "pattern": "shipaxiom.com/*",
